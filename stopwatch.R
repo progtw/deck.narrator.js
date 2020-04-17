@@ -1,9 +1,32 @@
 .interactive <- function(){
   pres_name <- "test1"
+  pres_title <- pres_name
   # copy your pdf of the presentation into <pres_name>/slideshow.pdf
   # and copy your audio to <pres_name>/audio.m4a and <pres_name>/audio.ogg
   burst_slides(pres_name) 
-  gen_slides(pres_name)
+  durations <- time_durations(pres_name)
+  slidecast <- gen_slides(durations, pres_name, pres_title)
+  slidecast <- gen_selfcontained_html(slidecast)
+  writeLines(slidecast, file.path(pres_name, paste0("slidecast.html")))
+  write_selfcontained_html(slidecast, pres_name)
+  cat("\n") # line feed
+  message(nSlidesTimed, " slides written to ",file.path("pres_name","slidecast.html"))
+}
+
+embed_audio <- function(slidecast, pres_name){
+  prevwd <- setwd(pres_name)
+  on.exit(setwd(prevwd))
+  # https://github.com/BitLooter/htmlark, does not embed audio, need manually
+  # need to convert audio to data tag
+  system("base64 -w0 audio.ogg > audio_ogg.txt")
+  audio_str <- readLines("audio_ogg.txt")
+  #writeLines(audio_str,"audio_ogg2.txt", sep = "")
+  slidecast <- sub('src="audio.ogg">', paste0('src="data:audio/ogg;base64,',audio_str,'">'), slidecast)
+}
+
+write_selfcontained_html <- function(slidecast, pres_name){
+  # https://github.com/BitLooter/htmlark
+  system(paste0("htmlark ", file.path(pres_name,"slidecast.html")," -o ", pres_name, ".html"))
 }
 
 burst_slides <- function(pres_name) {
@@ -13,7 +36,7 @@ burst_slides <- function(pres_name) {
   system("slidecrunch burst slideshow.pdf --width 1920 --height 1200")
 }
 
-gen_slides <- function(pres_name, pres_title = pres_name){
+time_durations <- function(pres_name){
   nSlides <- length(dir(file.path(pres_name), "^slideshow-.*\\.jpg"))
   try(system(paste0("audacity ", file.path(pres_name,"audio.m4a"), " &")))
   try(system(paste0("FoxitReader ", file.path(pres_name,"slideshow.pdf"), " &")))
@@ -24,18 +47,16 @@ gen_slides <- function(pres_name, pres_title = pres_name){
   pause()
   countdown(4L)
   durations <- stopwatch(nSlides)
+}
+
+gen_slides <- function(durations, pres_name, pres_title = pres_name){
   nSlidesTimed <- length(durations)
   output <- gen_slides_sections(durations)
   slidecast_head <- readLines("template/slidecast_head.html")
   slidecast_head <- sub("Presentation Title",pres_title, slidecast_head)
   slidecast_tail <- readLines("template/slidecast_tail.html")
   slidecast <- c(slidecast_head , output, slidecast_tail )
-  writeLines(slidecast, file.path(pres_name, paste0("slidecast.html")))
-  cat("\n") # line feed
-  message(nSlidesTimed, " slides written to ",file.path("pres_name","slidecast.html"))
 }
-
-
 
 pause = function(prompt = "Press <Enter> to continue...") {
   if (interactive()) {

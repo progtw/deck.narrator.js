@@ -22,3 +22,23 @@ There are two steps to adding audio narration to your slides (aside from recordi
           <source src="myAudio.ogg" type="audio/ogg"  />
           <track kind="caption" src="captions.vtt" srclang="en" label="English" />
         </audio>
+        
+## Stopwatch
+The `stopwatch` R script  provides help with taking the time of slide transitions. 
+and converting a pdf to images to a slidecast.
+
+- create a subfolder named <pres_name> 
+- copy your pdf with slides to <pres_name>/slideshow.pdf
+- copy your audio file to <pres_name>/audio.ogg
+- make sure to have [slidecrunch](http://slidecrunch.sourceforge.net/) in 
+  your path. It only uses the burst option and does not need all the avi 
+  dependencies.
+- Source the R script and interactively execute the command in the top function
+  - first adjust the <pres_name>
+  - convert the pdf to single jpgs
+  - time the presentation: You 
+    need to type Enter at each transition while audio plays.
+  - produce the file <pres_name>/slicecasts.html
+  - create a self-contained <pres_name>.html using 
+    [htmlark](https://github.com/BitLooter/htmlark)
+  
