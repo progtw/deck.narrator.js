@@ -5,8 +5,9 @@
   # copy your pdf of the presentation into <pres_name>/slideshow.pdf
   # and copy your audio to <pres_name>/audio.m4a and <pres_name>/audio.ogg
   burst_slides(pres_name) 
-  durations <- time_durations(pres_name)
-  saveRDS(durations, file = file.path(pres_name,"durations.rds"))
+  durations <- readRDS(file = file.path(pres_name,"durations.rds"))
+  #durations <- time_durations(pres_name)
+  #saveRDS(durations, file = file.path(pres_name,"durations.rds"))
   slidecast <- gen_slides(durations, pres_name, pres_title)
   writeLines(slidecast, file.path(pres_name, paste0("slidecast.html")))
   cat("\n") # line feed
@@ -25,8 +26,8 @@ burst_slides <- function(pres_name, width = 1280, height = 800) {
 
 time_durations <- function(pres_name){
   nSlides <- length(dir(file.path(pres_name), "^slideshow-.*\\.jpg"))
-  try(system(paste0("audacity ", file.path(pres_name,"audio.m4a"), " &")))
-  try(system(paste0("FoxitReader ", file.path(pres_name,"slideshow.pdf"), " &")))
+  #try(system(paste0("audacity ", file.path(pres_name,"audio.m4a"), " &")))
+  #try(system(paste0("FoxitReader ", file.path(pres_name,"slideshow.pdf"), " &")))
   cat("Keep your presentation slides before you,",
       " start the audio after the countdown, and a the R-Shell hit ",
       "<ENTER> at times of slide transition.")
@@ -69,7 +70,7 @@ stopwatch <- function(maxSlides = 80L){
   #maxSlides <- 80L
   durations <- numeric(maxSlides)
   start_time = Sys.time()
-  while (!nzchar(input) & slide < maxSlides) {
+  while (!nzchar(input) & slide <= maxSlides) {
     input <- pause(paste0("slide ",slide,": "))
     end_time = Sys.time()
     durations[slide] <- duration <- as.numeric(end_time - start_time)
@@ -81,11 +82,12 @@ stopwatch <- function(maxSlides = 80L){
 }
 
 gen_slides_sections <- function(durations){
+  # data-narrator-duration ending with 0 causes errors, make sure ending at .001
   do.call(c, lapply(seq_along(durations), function(i){
-    sprintf('<section class="slide" data-narrator-duration="%f" data-duration="%f">
+    sprintf('<section class="slide" data-narrator-duration="%.3f" data-duration="%.0f">
       <img src="slideshow-%d.jpg" />
 </section>
-',durations[i], durations[i]*1000, i - 1) # starts at slide 0
+',round(durations[i]-0.001,2)+0.001, durations[i]*1000, i-1) # starts at slide 0
   }))
 }
 

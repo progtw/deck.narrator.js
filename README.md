@@ -23,6 +23,9 @@ There are two steps to adding audio narration to your slides (aside from recordi
           <track kind="caption" src="captions.vtt" srclang="en" label="English" />
         </audio>
         
+When cloning this project, note the 
+[submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to update.        
+        
 ## Stopwatch
 The `stopwatch` R script  provides help with taking the time of slide transitions. 
 and converting a pdf to images to a slidecast.
