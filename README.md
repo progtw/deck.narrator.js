@@ -32,7 +32,10 @@ and converting a pdf to images to a slidecast.
 - copy your audio file to <pres_name>/audio.ogg
 - make sure to have [slidecrunch](http://slidecrunch.sourceforge.net/) in 
   your path. It only uses the burst option and does not need all the avi 
-  dependencies.
+  dependencies. But you may have to modify the script to produce 
+  [white background](https://stackoverflow.com/questions/2322750/replace-transparency-in-png-images-with-white-background)
+- [allow](https://cromwell-intl.com/open-source/pdf-not-authorized.html) 
+  convert to work on pdf files 
 - Source the R script and interactively execute the command in the top function
   - first adjust the <pres_name>
   - convert the pdf to single jpgs

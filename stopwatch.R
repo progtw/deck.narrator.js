@@ -1,39 +1,26 @@
 .interactive <- function(){
   pres_name <- "test1"
+  pres_name <- "wutzler20_egu_agg_inla"
   pres_title <- pres_name
   # copy your pdf of the presentation into <pres_name>/slideshow.pdf
   # and copy your audio to <pres_name>/audio.m4a and <pres_name>/audio.ogg
   burst_slides(pres_name) 
   durations <- time_durations(pres_name)
+  saveRDS(durations, file = file.path(pres_name,"durations.rds"))
   slidecast <- gen_slides(durations, pres_name, pres_title)
-  slidecast <- gen_selfcontained_html(slidecast)
   writeLines(slidecast, file.path(pres_name, paste0("slidecast.html")))
-  write_selfcontained_html(slidecast, pres_name)
   cat("\n") # line feed
-  message(nSlidesTimed, " slides written to ",file.path("pres_name","slidecast.html"))
+  message("slides written to ",file.path("pres_name","slidecast.html"))
+  write_selfcontained_html(slidecast, pres_name)
+  message("slides written to ",file.path("pres_name",paste0(pres_name,".html")))
 }
 
-embed_audio <- function(slidecast, pres_name){
-  prevwd <- setwd(pres_name)
-  on.exit(setwd(prevwd))
-  # https://github.com/BitLooter/htmlark, does not embed audio, need manually
-  # need to convert audio to data tag
-  system("base64 -w0 audio.ogg > audio_ogg.txt")
-  audio_str <- readLines("audio_ogg.txt")
-  #writeLines(audio_str,"audio_ogg2.txt", sep = "")
-  slidecast <- sub('src="audio.ogg">', paste0('src="data:audio/ogg;base64,',audio_str,'">'), slidecast)
-}
-
-write_selfcontained_html <- function(slidecast, pres_name){
-  # https://github.com/BitLooter/htmlark
-  system(paste0("htmlark ", file.path(pres_name,"slidecast.html")," -o ", pres_name, ".html"))
-}
-
-burst_slides <- function(pres_name) {
+#burst_slides <- function(pres_name, widht = 1920, height = 1200) {
+burst_slides <- function(pres_name, width = 1280, height = 800) {
   prevwd <- setwd(pres_name)
   on.exit(setwd(prevwd))
   unlink(paste0("slideshow-*.jpg"))
-  system("slidecrunch burst slideshow.pdf --width 1920 --height 1200")
+  system(sprintf("slidecrunch burst slideshow.pdf --width %d --height %d", width, height))
 }
 
 time_durations <- function(pres_name){
@@ -68,7 +55,7 @@ pause = function(prompt = "Press <Enter> to continue...") {
 }
 
 countdown <- function(n){
-  for(i in rev(seq_len(n))) {
+  for (i in rev(seq_len(n))) {
     cat(i)
     Sys.sleep(1)
   }
@@ -82,7 +69,7 @@ stopwatch <- function(maxSlides = 80L){
   #maxSlides <- 80L
   durations <- numeric(maxSlides)
   start_time = Sys.time()
-  while(!nzchar(input) & slide < maxSlides) {
+  while (!nzchar(input) & slide < maxSlides) {
     input <- pause(paste0("slide ",slide,": "))
     end_time = Sys.time()
     durations[slide] <- duration <- as.numeric(end_time - start_time)
@@ -98,7 +85,25 @@ gen_slides_sections <- function(durations){
     sprintf('<section class="slide" data-narrator-duration="%f" data-duration="%f">
       <img src="slideshow-%d.jpg" />
 </section>
-',durations[i], durations[i]*1000, i-1) # starts at slide 0
+',durations[i], durations[i]*1000, i - 1) # starts at slide 0
   }))
+}
+
+write_selfcontained_html <- function(slidecast, pres_name){
+  slidecast_audio <- embed_audio(slidecast, pres_name)
+  writeLines(slidecast_audio, file.path(pres_name, paste0("slidecast_audio.html")))
+  # https://github.com/BitLooter/htmlark
+  system(paste0("htmlark ", file.path(pres_name,"slidecast_audio.html")," -o ", pres_name, ".html"))
+}
+
+embed_audio <- function(slidecast, pres_name){
+  prevwd <- setwd(pres_name)
+  on.exit(setwd(prevwd))
+  # https://github.com/BitLooter/htmlark, does not embed audio, need manually
+  # need to convert audio to data tag
+  system("base64 -w0 audio.ogg > audio_ogg.txt")
+  audio_str <- suppressWarnings(readLines("audio_ogg.txt"))
+  #writeLines(audio_str,"audio_ogg2.txt", sep = "")
+  slidecast <- sub('src="audio.ogg">', paste0('src="data:audio/ogg;base64,',audio_str,'">'), slidecast)
 }
 
